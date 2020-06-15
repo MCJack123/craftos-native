@@ -37,11 +37,48 @@ start:
 
     lua_pushstring(L, "");
     lua_setglobal(L, "_CC_DEFAULT_SETTINGS");
-    lua_pushstring(L, "Linux i386 4.18");
+    lua_pushstring(L, "ComputerCraft 1.80 (craftos-native)");
     lua_setglobal(L, "_HOST");
 
+    /* Set up pcall fix */
+    status = luaL_loadstring(L, "_G.xpcall = function( _fn, _fnErrorHandler )\n\
+    local typeT = type( _fn )\n\
+    assert( typeT == \"function\", \"bad argument #1 to xpcall (function expected, got \"..typeT..\")\" )\n\
+    local co = coroutine.create( _fn )\n\
+    local tResults = { coroutine.resume( co ) }\n\
+    while coroutine.status( co ) ~= \"dead\" do\n\
+        tResults = { coroutine.resume( co, coroutine.yield() ) }\n\
+    end\n\
+    if tResults[1] == true then\n\
+        return true, unpack( tResults, 2 )\n\
+    else\n\
+        return false, _fnErrorHandler( tResults[2] )\n\
+    end\n\
+end\n\
+\n\
+_G.pcall = function( _fn, ... )\n\
+    local typeT = type( _fn )\n\
+    assert( typeT == \"function\", \"bad argument #1 to pcall (function expected, got \"..typeT..\")\" )\n\
+    local tArgs = { ... }\n\
+    return xpcall(\n\
+        function()\n\
+            return _fn( unpack( tArgs ) )\n\
+        end,\n\
+        function( _error )\n\
+            return _error\n\
+        end\n\
+    )\n\
+end");
+    if (status) {
+        /* If something went wrong, error message is at the top of */
+        /* the stack */
+        fprintf(stderr, "Couldn't load pcall fix: %s\n", lua_tostring(L, -1));
+        exit(1);
+    }
+    lua_call(L, 0, 0);
+
     /* Load the file containing the script we are going to run */
-    status = luaL_loadfile(coro, "/etc/craftos/bios.lua");
+    status = luaL_loadfile(coro, "/bios.lua");
     if (status) {
         /* If something went wrong, error message is at the top of */
         /* the stack */

@@ -12,13 +12,14 @@ unsigned char colors = 0x07;
 const unsigned char colorMap[16] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
 void termInit() {
+    int i;
     initscr();
     keypad(stdscr, TRUE);
     noecho();
     cbreak();
     nodelay(stdscr, TRUE);
     start_color();
-    for (int i = 0; i < 256; i++) init_pair(i, i & 0x0f, i >> 4);
+    for (i = 0; i < 256; i++) init_pair(i, i & 0x0f, i >> 4);
 }
 
 void termClose() {
@@ -32,11 +33,12 @@ void termClose() {
 #define setchar(x, y, c) mvaddch(y, x, c);
 
 int term_write(lua_State *L) {
+    int i;
     const char * str = lua_tostring(L, 1);
     #ifdef TESTING
     printf("%s\n", str);
     #endif
-    for (int i = 0; i < strlen(str) && cursorX < TERM_WIDTH; i++, cursorX++)
+    for (i = 0; i < strlen(str) && cursorX < TERM_WIDTH; i++, cursorX++)
         setchar(cursorX, cursorY, str[i]);
     refresh();
     return 0;
@@ -89,7 +91,7 @@ int term_clearLine(lua_State *L) {
 
 int log2i(int num) {
     int retval;
-    for (retval = 0; num & 1 == 0; retval++) num = num >> 1;
+    for (retval = 0; (num & 1) == 0; retval++) num = num >> 1;
     return retval;
 }
 
@@ -132,10 +134,11 @@ char htoi(char c) {
 }
 
 int term_blit(lua_State *L) {
+    int i;
     const char * str = lua_tostring(L, 1);
     const char * fg = lua_tostring(L, 2);
     const char * bg = lua_tostring(L, 3);
-    for (int i = 0; i < strlen(str) && cursorX < TERM_WIDTH; i++, cursorX++) {
+    for (i = 0; i < strlen(str) && cursorX < TERM_WIDTH; i++, cursorX++) {
         attroff(COLOR_PAIR(colors));
         colors = colorMap[htoi(bg[i])] << 4 | colorMap[htoi(fg[i])];
         attron(COLOR_PAIR(colors));

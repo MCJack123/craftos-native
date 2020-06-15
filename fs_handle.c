@@ -31,13 +31,15 @@ int handle_readAll(lua_State *L) {
 }
 
 int handle_readLine(lua_State *L) {
+    int i;
+    char * retval;
     FILE * fp = (FILE*)lua_touserdata(L, lua_upvalueindex(1));
     if (feof(fp)) return 0;
     long size = 0;
     while (fgetc(fp) != '\n' && !feof(fp)) size++;
     fseek(fp, 0 - size - 1, SEEK_CUR);
-    char * retval = (char*)malloc(size + 1);
-    for (int i = 0; i < size; i++) retval[i] = checkChar(fgetc(fp));
+    retval = (char*)malloc(size + 1);
+    for (i = 0; i < size; i++) retval[i] = checkChar(fgetc(fp));
     fgetc(fp);
     lua_pushstring(L, retval);
     return 1;

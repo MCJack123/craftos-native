@@ -69,7 +69,8 @@ void initKeys() {
 }
 
 int getKey(int ch) {
-    for (int i = 0; i < next_num; i++)
+    int i;
+    for (i = 0; i < next_num; i++)
         if (keys[i] == ch)
             return values[i];
     return 0;

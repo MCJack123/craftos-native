@@ -39,11 +39,12 @@ char * unconst(const char * str) {
 
 int fs_list(lua_State *L) {
     struct dirent *dir;
+    int i;
     char * path = fixpath(lua_tostring(L, 1));
     DIR * d = opendir(path);
     if (d) {
         lua_newtable(L);
-        for (int i = 0; (dir = readdir(d)) != NULL; i++) {
+        for (i = 0; (dir = readdir(d)) != NULL; i++) {
             lua_pushinteger(L, i);
             lua_pushstring(L, dir->d_name);
             lua_settable(L, -3);
@@ -175,7 +176,8 @@ int recurse_mkdir(const char * path) {
             if (recurse_mkdir(dirname(unconst(path)))) return 1;
             mkdir(path, 0777);
         } else return 1;
-    } else return 0;
+    }
+    return 0;
 }
 
 int fs_makeDir(lua_State *L) {
@@ -313,12 +315,13 @@ int fs_open(lua_State *L) {
 
 int fs_find(lua_State *L) {
     glob_t g;
+    int i;
     int rval = 0;
     const char * wildcard = lua_tostring(L, 1);
     lua_newtable(L);
     rval = glob(wildcard, 0, NULL, &g);
     if (rval == 0) {
-        for (int i = 0; i < g.gl_pathc; i++) {
+        for (i = 0; i < g.gl_pathc; i++) {
             lua_pushnumber(L, i + 1);
             lua_pushstring(L, g.gl_pathv[i]);
             lua_settable(L, -3);
