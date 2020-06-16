@@ -1,15 +1,17 @@
 #include "lib.h"
 
 static int bit_band(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a & b);
     return 1;
 }
 
 static int bit_bor(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a | b);
     return 1;
 }
@@ -21,29 +23,33 @@ static int bit_bnot(lua_State *L) {
 }
 
 static int bit_bxor(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a ^ b);
     return 1;
 }
 
 static int bit_blshift(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a << b);
     return 1;
 }
 
 static int bit_brshift(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a >> b | ((((a & 0x80000000) << b) - 1) << (32 - b)));
     return 1;
 }
 
 static int bit_blogic_rshift(lua_State *L) {
-    unsigned int a = lua_tointeger(L, 1);
-    unsigned int b = lua_tointeger(L, 2);
+    unsigned int a, b;
+    a = lua_tointeger(L, 1);
+    b = lua_tointeger(L, 2);
     lua_pushinteger(L, a >> b);
     return 1;
 }

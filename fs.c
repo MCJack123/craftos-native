@@ -40,8 +40,9 @@ char * unconst(const char * str) {
 int fs_list(lua_State *L) {
     struct dirent *dir;
     int i;
+    DIR * d;
     char * path = fixpath(lua_tostring(L, 1));
-    DIR * d = opendir(path);
+    d = opendir(path);
     if (d) {
         lua_newtable(L);
         for (i = 0; (dir = readdir(d)) != NULL; i++) {
@@ -56,16 +57,16 @@ int fs_list(lua_State *L) {
 }
 
 int fs_exists(lua_State *L) {
-    char * path = fixpath(lua_tostring(L, 1));
     struct stat st;
+    char * path = fixpath(lua_tostring(L, 1));
     lua_pushboolean(L, stat(path, &st) == 0);
     free(path);
     return 1;
 }
 
 int fs_isDir(lua_State *L) {
-    char * path = fixpath(lua_tostring(L, 1));
     struct stat st;
+    char * path = fixpath(lua_tostring(L, 1));
     lua_pushboolean(L, stat(path, &st) == 0 && S_ISDIR(st.st_mode));
     free(path);
     return 1;
@@ -97,6 +98,7 @@ int getmntpt(char *path, char *mount_point) {
     char cur_cwd[255];
     char *cur_cwd_p = cur_cwd;
     char saved_cwd[PATH_MAX];
+    size_t path_len, suffix_len, dir_len;
     if (getcwd(saved_cwd, PATH_MAX) == NULL) {
         errno = EIO;
         return ERROR;
@@ -116,7 +118,6 @@ int getmntpt(char *path, char *mount_point) {
             return ERROR;
         }
     } else { /* path is a file */
-        size_t path_len, suffix_len, dir_len;
         path_len = strlen(path);
         suffix_len = strlen(strrchr(path, 47)); /* 47 = '/' */
         dir_len = path_len - suffix_len;
@@ -144,8 +145,8 @@ int getmntpt(char *path, char *mount_point) {
 }
 
 int fs_getDrive(lua_State *L) {
-    char * path = fixpath(lua_tostring(L, 1));
     char mountpoint[PATH_MAX];
+    char * path = fixpath(lua_tostring(L, 1));
     if (!getmntpt(path, mountpoint)) {free(path); return 0;}
     lua_pushstring(L, mountpoint);
     free(path);
@@ -153,8 +154,8 @@ int fs_getDrive(lua_State *L) {
 }
 
 int fs_getSize(lua_State *L) {
-    char * path = fixpath(lua_tostring(L, 1));
     struct stat st;
+    char * path = fixpath(lua_tostring(L, 1));
     if (stat(path, &st) != 0) err(L, path, "No such file");
     lua_pushinteger(L, st.st_size);
     free(path);
@@ -162,8 +163,8 @@ int fs_getSize(lua_State *L) {
 }
 
 int fs_getFreeSpace(lua_State *L) {
-    char * path = fixpath(lua_tostring(L, 1));
     struct statvfs st;
+    char * path = fixpath(lua_tostring(L, 1));
     if (statvfs(path, &st) != 0) err(L, path, "No such file or directory");
     lua_pushinteger(L, st.f_bavail * st.f_bsize);
     free(path);
@@ -188,8 +189,9 @@ int fs_makeDir(lua_State *L) {
 }
 
 int fs_move(lua_State *L) {
-    char * fromPath = fixpath(lua_tostring(L, 1));
-    char * toPath = fixpath(lua_tostring(L, 2));
+    char * fromPath, *toPath;
+    fromPath = fixpath(lua_tostring(L, 1));
+    toPath = fixpath(lua_tostring(L, 2));
     if (rename(fromPath, toPath) != 0) {
         free(toPath);
         err(L, fromPath, strerror(errno));
@@ -200,24 +202,27 @@ int fs_move(lua_State *L) {
 }
 
 int fs_copy(lua_State *L) {
-    char * fromPath = fixpath(lua_tostring(L, 1));
-    char * toPath = fixpath(lua_tostring(L, 2));
+    char * fromPath, *toPath;
+    FILE * fromfp, *tofp;
+    char tmp[1024];
+    int read;
+    fromPath = fixpath(lua_tostring(L, 1));
+    toPath = fixpath(lua_tostring(L, 2));
 
-    FILE * fromfp = fopen(fromPath, "r");
+    fromfp = fopen(fromPath, "r");
     if (fromfp == NULL) {
         free(toPath);
         err(L, fromPath, "Cannot read file");
     }
-    FILE * tofp = fopen(toPath, "w");
+    tofp = fopen(toPath, "w");
     if (tofp == NULL) {
         free(fromPath);
         fclose(fromfp);
         err(L, toPath, "Cannot write file");
     }
 
-    char tmp[1024];
     while (!feof(fromfp)) {
-        int read = fread(tmp, 1, 1024, fromfp);
+        read = fread(tmp, 1, 1024, fromfp);
         fwrite(tmp, read, 1, tofp);
         if (read < 1024) break;
     }
@@ -237,11 +242,12 @@ int fs_delete(lua_State *L) {
 }
 
 int fs_combine(lua_State *L) {
+    char * localPath, *retval;
     const char * basePath = lua_tostring(L, 1);
-    char * localPath = fixpath(lua_tostring(L, 2));
+    localPath = fixpath(lua_tostring(L, 2));
     if (basePath[0] == '/') basePath = basePath + 1;
     if (basePath[strlen(basePath)-1] == '/') localPath = localPath + 1;
-    char * retval = (char*)malloc(strlen(basePath) + strlen(localPath) + 1);
+    retval = (char*)malloc(strlen(basePath) + strlen(localPath) + 1);
     strcpy(retval, basePath);
     strcat(retval, localPath);
     if (basePath[strlen(basePath)-1] == '/') localPath = localPath - 1;
@@ -251,9 +257,11 @@ int fs_combine(lua_State *L) {
 }
 
 int fs_open(lua_State *L) {
+    const char * mode;
+    FILE * fp;
     char * path = fixpath(lua_tostring(L, 1));
-    const char * mode = lua_tostring(L, 2);
-    FILE * fp = fopen(path, mode);
+    mode = lua_tostring(L, 2);
+    fp = fopen(path, mode);
     if (fp == NULL) err(L, path, strerror(errno));
     free(path);
     lua_newtable(L);

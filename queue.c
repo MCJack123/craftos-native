@@ -6,8 +6,8 @@ bool queue_empty(queue_t * queue) {
 }
 
 size_t queue_size(queue_t * queue) {
-    int i = 0;
     struct pointer_type * current;
+    int i = 0;
     for (current = queue->_back; current->next != NULL; current = current->next) i++;
     return i;
 }
@@ -29,8 +29,9 @@ void queue_push(queue_t * queue, const char * val) {
 }
 
 void queue_pop(queue_t * queue) {
+    struct pointer_type * p;
     if (queue->_front == NULL) return;
-    struct pointer_type * p = queue->_front;
+    p = queue->_front;
     queue->_front = p->next;
     if (queue->_front == NULL) queue->_back = NULL;
     free(p);

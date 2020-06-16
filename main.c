@@ -11,7 +11,7 @@
 #include "keys.h"
 
 int main() {
-    int status, result, i;
+    int status, result, i, narg;
     double sum;
     lua_State *L;
     lua_State *coro;
@@ -88,7 +88,7 @@ end");
 
     /* Ask Lua to run our little script */
     status = LUA_YIELD;
-    int narg = 0;
+    narg = 0;
     while (status == LUA_YIELD && running == 1) {
         status = lua_resume(coro, narg);
         if (status == LUA_YIELD) {
