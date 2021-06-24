@@ -13,6 +13,9 @@
 #include <dirent.h>
 #define true 1
 #define false 0
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 char * fixpath(const char * path) {
     char * retval = (char*)malloc(strlen(path) + 2);
