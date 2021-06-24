@@ -257,14 +257,12 @@ int os_cancelAlarm(lua_State *L) {
 int os_shutdown(lua_State *L) {
     sync();
     running = 0;
-    //reboot(LINUX_REBOOT_CMD_POWER_OFF);
     return 0;
 }
 
 int os_reboot(lua_State *L) {
     sync();
     running = 2;
-    //reboot(LINUX_REBOOT_CMD_RESTART);
     return 0;
 }
 
